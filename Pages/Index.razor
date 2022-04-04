@@ -1,0 +1,177 @@
+﻿@page "/"
+
+
+<h1>Grocery Store</h1>
+
+Welcome to Ajima Master Grocery App.
+@page "/"
+
+
+
+    
+
+
+@if (AllProducts != null)
+{
+
+
+    <h2>Select an item</h2>
+    //Display the list of products. Call ProductSelected when one is selected
+    <select size="4" style="width:100%;" @onchange="ProductSelected">
+@foreach (var product in AllProducts)
+        {
+            <option value="@product.Id.ToString()">@product.Name</option>
+        }
+    </select>
+    <br />
+
+    // Show the selected product
+    @if (SelectedProduct != null && ShowItem == true)
+    {
+        <div style="padding:1vw;background-color:lightgray;">
+            <table cellpadding="5" cellspacing="5">
+                <tr>
+                    <td align="right" valign="top"><strong>Name:</strong></td>
+                    <td align="left" valign="top">@SelectedProduct.Name</td>
+                </tr>
+                <tr>
+                    <td align="right" valign="top"><strong>Description:</strong></td>
+                    <td align="left" valign="top">@SelectedProduct.Description</td>
+                </tr>
+                <tr>
+                    <td align="right" valign="top"><strong>Price:</strong></td>
+                    <td align="left" valign="top">$@SelectedProduct.Price</td>
+                </tr>
+                <tr>
+                    <td align="right" valign="top"><strong>Add To Cart:</strong></td>
+                    <td align="left" valign="top">
+                        Quantity:
+                        <input @bind="Quantity" />
+                        <button @onclick="AddToCart">Add</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    }
+
+    // Show the cart contents if there are items in it.
+    @if (CartStateProvider != null && CartStateProvider.ShoppingCart.Items.Count > 0)
+    {
+        <br />
+        <h3>Your Cart:</h3>
+        <h4>Total: $@CartStateProvider.ShoppingCart.Total</h4>
+        <table cellpadding="5" cellspacing="5">
+            @foreach (var item in CartStateProvider.ShoppingCart.Items)
+            {
+                <tr>
+                    <td colspan="2">
+                        <hr />
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right" valign="top"><strong>Name:</strong></td>
+                    <td align="left" valign="top">@item.Product.Name</td>
+                </tr>
+                <tr>
+                    <td align="right" valign="top"><strong>Description:</strong></td>
+                    <td align="left" valign="top">@item.Product.Description</td>
+                </tr>
+                <tr>
+                    <td align="right" valign="top"><strong>Price:</strong></td>
+                    <td align="left" valign="top">$@item.Product.Price</td>
+                </tr>
+                <tr>
+                    <td align="right" valign="top"><strong>Quantity:</strong></td>
+                    <td align="left" valign="top">@item.Quantity</td>
+                </tr>
+                <tr>
+                    <td align="right" valign="top"><strong>Total:</strong></td>
+                    <td align="left" valign="top">$@item.Total</td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        @*Clicking this button passes the item so we can remove it*@
+                        <button @onclick="@(() => RemoveItem(@item))">Remove</button>
+                    </td>
+                </tr>
+            }
+        </table>
+        <br />
+        <h4>Total: $@CartStateProvider.ShoppingCart.Total</h4>
+    }
+
+}
+
+@code {
+    
+
+    // Cascading Parameters and Values flow down the entire component tree
+    [CascadingParameter] CartStateProvider CartStateProvider { get; set; }
+
+    bool ShowItem = false;
+    string Quantity = "1";
+    List<Product> AllProducts;
+    Product SelectedProduct;
+    public void ShoppingCart(){}
+
+    void ProductSelected(ChangeEventArgs args)
+    {
+        // User clicked on an item in the list.
+        // Show the product and give them an option to add to cart.
+        SelectedProduct = (from x in AllProducts
+                           where x.Id == Convert.ToInt32(args.Value)
+                           select x).First();
+        Quantity = "1";
+        ShowItem = true;
+    }
+
+    async Task AddToCart()
+    {
+        // Create a new item for the shopping cart
+        var item = new CartProduct
+        {
+            Product = SelectedProduct,
+            Quantity = Convert.ToInt32(Quantity)
+        };
+        // Add it to the cart
+        CartStateProvider.ShoppingCart.Items.Add(item);
+        // Save to local storage
+        await CartStateProvider.SaveChangesAsync();
+        // Stop displaying the selected item
+        ShowItem = false;
+    }
+
+    async Task RemoveItem(CartProduct Item)
+    {
+        // User clicked a Remove button to remove an item from the cart.
+        CartStateProvider.ShoppingCart.Items.Remove(Item);
+        // Update the cart - save to localstorage
+        await CartStateProvider.SaveChangesAsync();
+    }
+
+    protected override void OnInitialized()
+    {
+        // Create the products we can purchase
+        AllProducts = new List<Product>();
+
+        AllProducts.Add(new Product
+        {
+            Id = 1,
+            Name = "1 lb. Bag of Yirgacheffe Coffee Beans",
+            Description = "Yirgacheffe is a rich Ethiopian coffee that will poke your eye out",
+            Price = (decimal)10.99
+        });
+
+        AllProducts.Add(new Product
+        {
+            Id = 2,
+            Name = "Tablet Show Coffee Mug",
+            Description = "Back by popular demand for a limited time, the long-coveted Tablet Show Coffee Mug",
+            Price = (decimal)4.99
+        });
+    }
+}
+<!--<SurveyPrompt Title="How is Blazor working for you?" />
+
+
+<Counter IncrementAmount="10" />>
