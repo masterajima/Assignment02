@@ -1,10 +1,13 @@
 using System;
-namespace GroceryItem{
-    public class GroceryIsle{
-        public int ID{get;set;}
-        public string IsleName{get;set;}
-        public double IsleNumber{get;set;}
-    }
+using System.Collections.Generic;
+using System.Linq;
+namespace GroceryStoreList.Pages{
+    public class GroceryIsle
+{
+    public string IsleName { get; set; } =String.Empty;
+    public int IsleNumber { get; set; }
+    public List<FoodItem> FoodItemsList { get; set; } = new List<FoodItem>();
+}
 }
                     
                 
